@@ -8,28 +8,28 @@ const int slo=250; 	//dlugosc bufora slownikowego 16 384
 const int buf=250; 	//dlugosc bufora wejsciowego 258
 int PCS[3];	//tablica przechowujaca P,C,S
 
-void RPRP::preparePixelsForCompression(){
-    for(unsigned int i = 0; i < this->uncompressedPixels.size(); i++){
+void RPRP::preparePixelsForCompression()
+{
+    for(unsigned int i = 0; i < this -> uncompressedPixels.size(); i++)
+	{
         this->temporaryUncompressedPixels.push_back(this->uncompressedPixels[i].Red);
         this->temporaryUncompressedPixels.push_back(this->uncompressedPixels[i].Green);
         this->temporaryUncompressedPixels.push_back(this->uncompressedPixels[i].Blue);
     }
 }
 
-void RPRP::preparePixelsForSavingBMP(){
+void RPRP::preparePixelsForSavingBMP()
+{
     RGBPixel tempPixel;
-    for(unsigned int i = 0; i < temporaryUncompressedPixels.size(); i+=3){
-
+    for(unsigned int i = 0; i < temporaryUncompressedPixels.size(); i += 3)
+	{
         tempPixel.Red = temporaryUncompressedPixels[i];
         tempPixel.Green = temporaryUncompressedPixels[i + 1];
         tempPixel.Blue = temporaryUncompressedPixels[i + 2];
 
         uncompressedPixels.push_back(tempPixel);
-
     }
 }
-
-
 
 void RPRP::LZ77_Compression(vector<uint8_t> code, vector<uint8_t> & result)
 {
@@ -44,6 +44,7 @@ void RPRP::LZ77_Compression(vector<uint8_t> code, vector<uint8_t> & result)
 	{
 		tekst[z] = code[0];
 	}
+
 	result.push_back(code[0]);
 	while (!code.empty())
 	{
@@ -64,14 +65,13 @@ void RPRP::LZ77_Compression(vector<uint8_t> code, vector<uint8_t> & result)
 			h2 = 0;
 			h1 = 0;
 
-
-			for (i = 0; i<m; i++)
+			for (i = 0; i < m; i++)
 			{
 				h2 = ((h2*r) + tekst[i]);
 				h2 %= q;
 			}
 
-			for (i = 0; i<m; i++)
+			for (i = 0; i < m; i++)
 			{
 				h1 = ((h1*r) + wzorzec[i]);
 				h1 %= q;
@@ -79,10 +79,13 @@ void RPRP::LZ77_Compression(vector<uint8_t> code, vector<uint8_t> & result)
 
 			rm = power_modulo_fast(r, m - 1, q);
 			i = 0;
-			while (i<n - m)
+			while (i < n - m)
 			{
 				j = 0;
-				if (h1 == h2) while ((j<m) && (wzorzec[j] == tekst[i + j])) j++;
+				if (h1 == h2) while ((j < m) && (wzorzec[j] == tekst[i + j]))
+				{
+					j++;
+				}
 				if (j == m)
 				{
 					if (l>length)
@@ -93,14 +96,23 @@ void RPRP::LZ77_Compression(vector<uint8_t> code, vector<uint8_t> & result)
 				}
 				h2 = ((h2 - tekst[i] * rm)*r + tekst[i + m]);
 				h2 %= q;
-				if (h2<0) h2 += q;
+
+				if (h2 < 0)
+				{
+					h2 += q;
+				}
 				i++;
 			}
+
 			j = 0;
-			if (h1 == h2) while ((j<m) && (wzorzec[j] == tekst[i + j])) j++;
+			if (h1 == h2) while ((j < m) && (wzorzec[j] == tekst[i + j]))
+			{
+				j++;
+			}
+
 			if (j == m)
 			{
-				if (l>length)
+				if (l > length)
 				{
 					position = i;
 					length = l;
@@ -180,11 +192,12 @@ void RPRP::LZ77_Decompression(vector<uint8_t> & code, std::vector<uint8_t> & dan
 
 int RPRP::fh(int dl,int indeks, uint8_t tab[])	
 {
-	int h=0;
-	for(int i=indeks;i<dl+indeks;i++)
+	int h = 0;
+	for (int i = indeks; i < dl + indeks; i++)
 	{
-		  h = 2 * h + 1 - (tab[i] & 1);
+		h = 2 * h + 1 - (tab[i] & 1);
 	}
+
 	return h %256;
 }
 
@@ -192,127 +205,141 @@ int RPRP::sprawdzenie(int i,int dl,int indeks_b, uint8_t tab[])
 {
 	int j=i;
 	int pom=0;	
-	for(j;j<(i+dl);j++)
+	for (j; j < (i + dl); j++)
 	{
-		if(tab[indeks_b]==tab[j])
+		if (tab[indeks_b] == tab[j])
+		{
 			pom++;
+		}
 		indeks_b++;
 	}
+
 	return pom;
 }
 
-bool RPRP::WyszukiwanieWzorca(int dl,int indeks_b,int indeks_s, uint8_t tab[])
+bool RPRP::WyszukiwanieWzorca(int dl, int indeks_b, int indeks_s, uint8_t tab[])
 {
 	int spr;
-	int i=indeks_s; 
-	int h_slownika=fh(dl,i,tab);
-	int h_bufora=fh(dl,indeks_b,tab);
-	int pom=0;
-	while(true)
+	int i = indeks_s;
+	int h_slownika = fh(dl, i, tab);
+	int h_bufora = fh(dl, indeks_b, tab);
+	int pom = 0;
+	while (true)
 	{
-		if(h_slownika==h_bufora) 
+		if (h_slownika == h_bufora)
 		{
-			spr=sprawdzenie(i,dl,indeks_b,tab);
-			if(dl==spr)
+			spr = sprawdzenie(i, dl, indeks_b, tab);
+			if (dl == spr)
 			{
-				PCS[0]=pom; 
-				PCS[1]=dl;	
-				PCS[2]=tab[indeks_b+dl];	
+				PCS[0] = pom;
+				PCS[1] = dl;
+				PCS[2] = tab[indeks_b + dl];
 				return true;
 			}
-
 		}
+
 		i++;
 		pom++;
-		if(i==indeks_b-dl) break;	
-		h_slownika=fh(dl,i,tab);
+
+		if (i == indeks_b - dl) break;
+
+		h_slownika = fh(dl, i, tab);
 	}
+
 	return false;
 
 }
 
-void RPRP::LZ77(vector<uint8_t> dane,int R, vector<uint8_t> &kompresja)
-{   
-    uint8_t *tab = new uint8_t[R+slo];	
+void RPRP::LZ77(vector<uint8_t> dane, int R, vector<uint8_t> &kompresja)
+{
+	uint8_t *tab = new uint8_t[R + slo];
 
-	for(int i=0;i<R;i++)
-    {
-		tab[i+slo]=dane[i];	//przepisanie danych do tablicy
-    }
-	for(int i=0;i<slo;i++)	//uzupelnienie slownika(tablicy od indeksu 0 do slo) pierwszym elementem bufora
-		tab[i]=tab[slo];
+	for (int i = 0; i < R; i++)
+	{
+		tab[i + slo] = dane[i];	//przepisanie danych do tablicy
+	}
+
+	for (int i = 0; i < slo; i++)	//uzupelnienie slownika(tablicy od indeksu 0 do slo) pierwszym elementem bufora
+	{
+		tab[i] = tab[slo];
+	}
+
 	kompresja.push_back(tab[0]);
-	int indeks_b=slo;	//indeks bufora,zaczyna sie za slownikiem
-	int indeks_s=0;		//indeks slownika
-	while(indeks_b<=R-buf)
+	int indeks_b = slo;	//indeks bufora,zaczyna sie za slownikiem
+	int indeks_s = 0;		//indeks slownika
+
+	while (indeks_b <= R - buf)
 	{
 
-		PCS[0]=0; //gdy nie istnieje wspolny podciag
-		PCS[1]=0;
-		PCS[2]=tab[indeks_b];
-		int dl=buf-1;	//dl = dlugosci bufora pomniejszona o jeden
-		while(dl>0)
+		PCS[0] = 0; //gdy nie istnieje wspolny podciag
+		PCS[1] = 0;
+		PCS[2] = tab[indeks_b];
+
+		int dl = buf - 1;	//dl = dlugosci bufora pomniejszona o jeden
+		while (dl > 0)
 		{
-			if(WyszukiwanieWzorca(dl,indeks_b,indeks_s,tab)==true)	//sprawdzenie czy istnieje podciag w slowniku(na poczatku o dlugosci bufora, nastepnie zmniejszany)
+			if (WyszukiwanieWzorca(dl, indeks_b, indeks_s, tab) == true)	//sprawdzenie czy istnieje podciag w slowniku(na poczatku o dlugosci bufora, nastepnie zmniejszany)
 			{
 				break;
 			}
 			dl--;
 		}
 
-		for(int i=0;i<3;i++)
-        {
+		for (int i = 0; i < 3; i++)
+		{
 			kompresja.push_back(PCS[i]);
-        }
-		indeks_b+=(PCS[1]+1);	//okno bufora przesuwamy o C+1
-		indeks_s+=(PCS[1]+1);
+		}
+		indeks_b += (PCS[1] + 1);	//okno bufora przesuwamy o C+1
+		indeks_s += (PCS[1] + 1);
 
 	}
-	while(indeks_b<R)
+	while (indeks_b < R)
 	{
-		PCS[0]=0; //gdy nie istnieje wspolny podciag
-		PCS[1]=0;
-		PCS[2]=tab[indeks_b];
-		int dl=R-indeks_b-1;	//dl = dlugosci bufora pomniejszona o jeden ale nie za dluga aby nie wyszla za tablice
-		while(dl>0)
+		PCS[0] = 0; 
+		PCS[1] = 0;
+		PCS[2] = tab[indeks_b];
+		int dl = R - indeks_b - 1;	//dl = dlugosci bufora pomniejszona o jeden ale nie za dluga aby nie wyszla za tablice
+
+		while (dl > 0)
 		{
 
-			if(WyszukiwanieWzorca(dl,indeks_b,indeks_s,tab)==true)	//sprawdzenie czy istnieje podciag w slowniku(na poczatku o dlugosci bufora, nastepnie zmniejszany)
+			if (WyszukiwanieWzorca(dl, indeks_b, indeks_s, tab) == true)	//sprawdzenie czy istnieje podciag w slowniku(na poczatku o dlugosci bufora, nastepnie zmniejszany)
 			{
 				break;
 			}
 
 			dl--;
 		}
-		for(int i=0;i<3;i++)
-        {
-            kompresja.push_back(PCS[i]);
-        }
 
-		indeks_b+=(PCS[1]+1);	//okno bufora przesuwamy o C+1
-		indeks_s+=(PCS[1]+1);
+		for (int i = 0; i < 3; i++)
+		{
+			kompresja.push_back(PCS[i]);
+		}
+
+		indeks_b += (PCS[1] + 1);	//okno bufora przesuwamy o C+1
+		indeks_s += (PCS[1] + 1);
 	}
-	//cout << "Zakonczylem kompresje" << endl;
 }
 
-void RPRP::LZ77Dekompresja( vector<uint8_t> kompresja,  vector<uint8_t> &dekompresja)
+void RPRP::LZ77Dekompresja(vector<uint8_t> kompresja, vector<uint8_t> & dekompresja)
 {
-    vector<uint8_t> slownik;
-	for(int i=0;i<slo;i++)
-    {//wypelnienie slownika pierwszym elementem
-		slownik.push_back(kompresja[0]);
-
-    }
-	int ile=0;	//wielkosc tablicy dekompresja
-	int n;
-	int limit=kompresja.size()-2;
-	for(int i=1;i<limit;i+=3)	//spisanie wszystkich danych z kompresji
+	vector<uint8_t> slownik;
+	for (int i = 0; i < slo; i++)
 	{
-		for(int j=kompresja[i];j<(kompresja[i+1]+kompresja[i]);j++)	//wpisanie do dekompresji odpowiedniej ilosci wyrazow ze slownika od P do C
+		slownik.push_back(kompresja[0]);
+	}
+
+	int ile = 0;	
+	int n;
+	int limit = kompresja.size() - 2;
+
+	for (int i = 1; i < limit; i += 3)	
+	{
+		for (int j = kompresja[i]; j < (kompresja[i + 1] + kompresja[i]); j++)	
 		{
-			if(j>=slo)
+			if (j >= slo)
 			{
-				dekompresja.push_back(dekompresja[ile-1]);
+				dekompresja.push_back(dekompresja[ile - 1]);
 				ile++;
 			}
 			else
@@ -321,18 +348,21 @@ void RPRP::LZ77Dekompresja( vector<uint8_t> kompresja,  vector<uint8_t> &dekompr
 				ile++;
 			}
 		}
-		n=ile-kompresja[i+1];
-		for(int j=0;j<kompresja[i+1];j++)	//zaktualizowanie slownika
+
+		n = ile - kompresja[i + 1];
+
+		for (int j = 0; j < kompresja[i + 1]; j++)	
 		{
 
 			slownik.erase(slownik.begin());
 			slownik.push_back(dekompresja[n]);
 			n++;
 		}
-		dekompresja.push_back(kompresja[i+2]);	//dopisanie elementu S
+
+		dekompresja.push_back(kompresja[i + 2]);	
 		ile++;
 		slownik.erase(slownik.begin());
-		slownik.push_back(kompresja[i+2]);
+		slownik.push_back(kompresja[i + 2]);
 	}
 }
 
